@@ -1,0 +1,9 @@
+; WMPNativeSubtitle_plugin.def : Declares the module parameters.
+
+LIBRARY      "WMPNativeSubtitle_plugin.DLL"
+
+EXPORTS
+	DllCanUnloadNow     PRIVATE
+	DllGetClassObject   PRIVATE
+	DllRegisterServer   PRIVATE
+	DllUnregisterServer	PRIVATE
