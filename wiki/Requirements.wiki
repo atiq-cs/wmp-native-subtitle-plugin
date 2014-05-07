@@ -9,8 +9,13 @@ Implement following for properties dialog box
 
 
 == Other features to implement ==
-Implement following for properties dialog box
+Implement following into the plugin
   # Implement handling of Unicode charset
   # Hide smi, change location
   # Change location of log file as well, no need to create it in every directory…
   # Included a an error message when plugin cannot create file in the directory where media file exists, we have to change it
+
+== Deployment ==
+Consider building following better deployment
+  # Installer for 32 bit
+  # Installer for 64 bit, should also include setting Wmp 64 bit as default
