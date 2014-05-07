@@ -1,6 +1,4 @@
 #labels Phase-Requirements
-# Further requirements proposed in this wiki
-
 = New Requirements =
 
 == Properties Implementation ==
@@ -16,12 +14,3 @@ Implement following for properties dialog box
   # Hide smi, change location
   # Change location of log file as well, no need to create it in every directory…
   # Included a an error message when plugin cannot create file in the directory where media file exists, we have to change it
-
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
