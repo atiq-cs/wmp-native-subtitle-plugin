@@ -1,0 +1,6 @@
+#labels Phase-Requirements
+ # Using Windows Registry for persistence
+
+= Storing/retrieving Property Data using Windows Registry =
+
+* Optimizations are possible, follow suggestions for the article in codeproject. *
