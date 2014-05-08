@@ -1,8 +1,13 @@
 #summary Providing Specification considered during Design
 #labels Phase-Support
 
+
 == Unix Conventions ==
 We are supporting Unix Text File encoding which uses \n instead of \r\n. However, our output file use \r\n and utf-8 encoding.
+
+== html tag from subrip file ==
+html code from subrip file are kept intact in smi file. Therefore, styles specified in srt file are retained automatically as long as those tags are supported in SAMI
+
 
 == Counter Number ==
 === Max length ===
