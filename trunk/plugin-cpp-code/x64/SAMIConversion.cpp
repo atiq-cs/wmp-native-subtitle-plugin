@@ -24,7 +24,7 @@ m_bLogEnabled(bLogStatus)
 	inSubFileName = infileName;
 
 	// get output file name from in file name
-	const int smiFNSize = _tcslen(inSubFileName) + 1;
+	const size_t smiFNSize = _tcslen(inSubFileName) + 1;
 	outSmiFileName = new TCHAR[smiFNSize];
 	_tcsncpy_s(outSmiFileName, smiFNSize, inSubFileName, smiFNSize - 4);
 	_tcscpy_s(&outSmiFileName[smiFNSize - 4], 4, TEXT("smi"));
@@ -105,7 +105,8 @@ BOOL SubToSAMIConverter::convert_to_sami() {
 		return FALSE;
 
 	LPTSTR linestr=NULL;		// will be allocated by getline, we are supporting UNICODE
-	TCHAR substr[READBUFFERSIZE] = {0};
+	//TCHAR substr[READBUFFERSIZE] = {0};
+	TCHAR substr[READBUFFERSIZE*7] = { 0 };
 	int len=0;
 
 	// write initial style description and header
@@ -220,7 +221,12 @@ BOOL SubToSAMIConverter::convert_to_sami() {
 			// add to sub buffer
 			if (substr[0] != _T('\0'))
 				wcscat_s(substr, READBUFFERSIZE, TEXT("<br>\r\n\t\t"));
-			wcscat_s(substr, READBUFFERSIZE, linestr);
+
+			//if (CheckUnicodeSymbol(linestr, this))
+			if (CheckUnicodeSymbol(linestr))
+				EmbedUnicodeSymbols(substr, linestr);
+			else
+				wcscat_s(substr, READBUFFERSIZE, linestr);
 			writeLog(TEXT("convert_to_sami:: text = "));
 			writeLog(linestr);
 			writeLog(TEXT("\r\n\r\n"));
@@ -232,44 +238,43 @@ BOOL SubToSAMIConverter::convert_to_sami() {
 
 	}
 	// if srt file is not properly ended with an extra blank line, handle this
-				writeLog(TEXT("convert_to_sami:: line type = NEWLINE\r\n\r\n"));
-			// wiki: A blank line containing no text indicating the start of a new subtitle
-			//  The subtitle separator, a blank line, is the double byte MS-DOS CR+LF pair, though the POSIX single byte linefeed is also well supported.
-			// previous line type can only be TEXTLINE
-			// 
-			// output subtitle text and re-initialize buffer
-		if (substr[0] != L'\0') {
-			if (start_time == -1)
-				return FALSE;
-			if (ending_time == -1)
-				return FALSE;
+	writeLog(TEXT("convert_to_sami:: line type = NEWLINE\r\n\r\n"));
+	// wiki: A blank line containing no text indicating the start of a new subtitle
+	//  The subtitle separator, a blank line, is the double byte MS-DOS CR+LF pair, though the POSIX single byte linefeed is also well supported.
+	// previous line type can only be TEXTLINE
+	// 
+	// output subtitle text and re-initialize buffer
+	if (substr[0] != L'\0') {
+		if (start_time == -1)
+			return FALSE;
+		if (ending_time == -1)
+			return FALSE;
 
+		// output timestamp and sub with tags
+		writeSmiText(L"  <SYNC Start=\"");
+		tempStr[0] = _T('\0');
+		_ui64tot_s(start_time, tempStr, 12, 10);
+		writeSmiText(tempStr);
+		writeSmiText(L"\">\r\n\t<p class=\"SACAPTION\">\r\n\t\t");
+
+		// write subitle
+		writeSmiText(substr);
+		// close tag
+		writeSmiText(L"\r\n\t</p>\r\n  </SYNC>\r\n");
+
+		if (ending_time>0) {
 			// output timestamp and sub with tags
 			writeSmiText(L"  <SYNC Start=\"");
 			tempStr[0] = _T('\0');
-			_ui64tot_s(start_time, tempStr, 12, 10);
+			_ui64tot_s(ending_time, tempStr, 12, 10);
 			writeSmiText(tempStr);
 			writeSmiText(L"\">\r\n\t<p class=\"SACAPTION\">\r\n\t\t");
-
-			// write subitle
-			writeSmiText(substr);
-			// close tag
+			writeSmiText(L"&nbsp;");
+			// end tag
 			writeSmiText(L"\r\n\t</p>\r\n  </SYNC>\r\n");
-
-			if (ending_time>0) {
-				// output timestamp and sub with tags
-				writeSmiText(L"  <SYNC Start=\"");
-				tempStr[0] = _T('\0');
-				_ui64tot_s(ending_time, tempStr, 12, 10);
-				writeSmiText(tempStr);
-				writeSmiText(L"\">\r\n\t<p class=\"SACAPTION\">\r\n\t\t");
-				writeSmiText(L"&nbsp;");
-				// end tag
-				writeSmiText(L"\r\n\t</p>\r\n  </SYNC>\r\n");
-			}
-			substr[0] = L'\0';
 		}
-
+		substr[0] = L'\0';
+	}
 
 	// finish tag
 	writeSmiText(L"</body>\r\n</SAMI>\r\n");
@@ -284,7 +289,37 @@ BOOL SubToSAMIConverter::convert_to_sami() {
 	}
     CloseHandle(hOutFile);
 	hOutFile = NULL;
+	if (m_bLogEnabled) {
+		CloseHandle(hLogFile);
+		hLogFile = NULL;
+	}
+
 	return TRUE;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// CWMPNativeSubtitle::writeSmiText
+// Take Unicode string to write into UTF-8 file
+// if unicode to utf-8 conversion fails or write fails it returns an error
+void SubToSAMIConverter::EmbedUnicodeSymbols(LPWSTR pSubStr, LPWSTR pLine) {
+	size_t pSubLen = wcslen(pSubStr);
+	for (int i = 0; pLine[i] != _T('\0'); i++) {
+		if ((unsigned int)pLine[i] <= 0xFF) {
+			pSubStr[pSubLen++] = pLine[i];
+		}
+		else {
+			pSubStr[pSubLen++] = L'&';
+			pSubStr[pSubLen++] = L'#';
+
+			WCHAR numbuf[12];
+			_itow_s((int)pLine[i], numbuf, 10, 10);
+			for (int j = 0; numbuf[j] != L'\0'; j++)
+				pSubStr[pSubLen++] = numbuf[j];
+			pSubStr[pSubLen++] = L';';
+		}
+	}
+	pSubStr[pSubLen] = L'\0';
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -307,8 +342,10 @@ BOOL SubToSAMIConverter::writeSmiText(LPTSTR bigStr/*, BOOL BOM_flag*/) {
                     dwBytesToWrite,  // number of bytes to write
                     &dwBytesWritten, // number of bytes that were written
                     NULL);            // no overlapped structure
-	delete DataBuffer;
-	DataBuffer = NULL;
+	if (DataBuffer) {
+		delete DataBuffer;
+		DataBuffer = NULL;
+	}
 
 	return (bErrorFlag && (dwBytesWritten == dwBytesToWrite));
 }
@@ -410,7 +447,7 @@ BOOL SubToSAMIConverter::get_sub_line(LPTSTR *lineStr, int *length) {
 		len += 1;		// for \n
 
 
-	int buf_len = wcslen(samiBuffer);
+	size_t buf_len = wcslen(samiBuffer);
 	// align buffer to initial
 	wcsncpy_s(samiBuffer, SMIBUFFERSIZE, &samiBuffer[len], buf_len-len);
 	samiBuffer[buf_len-len] = L'\0';
@@ -500,7 +537,7 @@ BOOL SubToSAMIConverter::read_data_into_buffer() {
 		}
 
 		if (ReadBufferW) {
-			int len = wcslen(samiBuffer);
+			size_t len = wcslen(samiBuffer);
 			if (SMIBUFFERSIZE-(DWORD)len < dwBytesRead) {
 				// we just faced a buffer overflow
 				writeLog(TEXT("read_data_into_buffer:: buffer overflow\r\n"));
@@ -538,6 +575,30 @@ BOOL SubToSAMIConverter::read_data_into_buffer() {
 	return FALSE;
 }
 
+BOOL CheckUnicodeSymbol(LPWSTR pLine) {
+	// check if we need to embed Unicode
+	for (int i = 0; pLine[i] != _T('\0'); i++)
+		if ((unsigned int)pLine[i] > 0xFF)
+			return TRUE;
+
+	return FALSE;
+}
+
+/* for debugging 
+BOOL CheckUnicodeSymbol(LPWSTR pLine, SubToSAMIConverter* pSamiConverter) {
+	// check if we need to embed Unicode
+	for (int i = 0; pLine[i] != _T('\0'); i++)
+	if ((unsigned int)pLine[i] > 0xFF) {
+		WCHAR dbg[10] = L"0 (u)\r\n";
+		dbg[0] = pLine[i];
+		pSamiConverter->writeLog(dbg);
+
+		return TRUE;
+	}
+
+	return FALSE;
+}*/
+
 // shouldn't allocate data here as caller pointer will not point to the allocated memory location
 // but there is way to do this using pointer to pointer, however we are not going to make design change now
 // this function should set newline_length with length of data only
@@ -558,7 +619,8 @@ BOOL should_read_new_data(LPWSTR buf, int* newline_length, SubToSAMIConverter* p
 }
 
 LINETYPE get_line_type(LPTSTR line, SubToSAMIConverter* pSamiConverter) {
-	int length = _tcslen(line);
+	size_t length = _tcslen(line);
+	UNREFERENCED_PARAMETER(pSamiConverter);
 
 	if (line == NULL)
 		return UNKNOWN_LINE_TYPE;
@@ -566,9 +628,12 @@ LINETYPE get_line_type(LPTSTR line, SubToSAMIConverter* pSamiConverter) {
 	if (line[0] == L'\n' && line[1] == L'\0')
 		return NEWLINE;
 
-	if (length<6) {// considering highest length of sequence is 5
-		//int
-		if (isNumber(line)) {
+	if (length<MAX_SEQ_LENGTH) {// considering highest length of sequence is MAX_SEQ_LENGTH
+		size_t clean_length = length;
+		// eliminating consideration of trailing spaces, some subtitle files include
+		for (; clean_length >= 0 && line[clean_length - 1] == _T(' '); clean_length--);
+			
+		if (isNumber(line, clean_length)) {
 			return SEQUENCE;
 		}
 	}
@@ -591,12 +656,13 @@ LINETYPE get_line_type(LPTSTR line, SubToSAMIConverter* pSamiConverter) {
 
 }
 
-bool isNumber(LPTSTR str) {
+bool isNumber(LPTSTR str, int length_to_check) {
     // Does not accepts number preceding a - sign, as sequence in sub never negative
-	int i, len = _tcslen(str);
-	if (len == 0)
+	int i;
+	// size_t len = _tcslen(str);
+	if (length_to_check == 0)
 		return false;
-    else if (len == 1 && (str[len-1] == L'\n' ||  str[len-1] == L'-'))
+	else if (length_to_check == 1 && (str[length_to_check - 1] == L'\n' || str[length_to_check - 1] == L'-'))
 		return false;
 
 	// quick hack for number lines ending with one or multiple spaces (happens sometimes) or newlines (adopted from old code)
@@ -608,7 +674,7 @@ bool isNumber(LPTSTR str) {
 	// current suggestion is to correct these types of errors using regular expresion of notepad++ manually
 	// currently we don't support such non-standard srt files; hence disabling that segment of code
     i=0;
-	for (; i<len; i++)
+	for (; i<length_to_check; i++)
 		if (str[i] < L'0' || str[i] > L'9') {
 			return false;
 		}

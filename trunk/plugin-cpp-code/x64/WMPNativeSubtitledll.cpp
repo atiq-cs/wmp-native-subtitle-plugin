@@ -77,5 +77,3 @@ STDAPI DllUnregisterServer(void)
 
     return hr;
 }
-
-

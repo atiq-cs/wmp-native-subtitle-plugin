@@ -19,6 +19,7 @@
 // Partial definition
 enum TEXT_ENCODE_FORMAT;
 #define SMIBUFFERSIZE	2049
+#define MAX_SEQ_LENGTH	8
 
 enum LINETYPE { NEWLINE, SEQUENCE, TIMESTAMP, TEXTLINE, UNKNOWN_LINE_TYPE };
 
@@ -49,6 +50,7 @@ private:
 	// BOOL writeSmiText(LPTSTR bigStr, BOOL BOM_flag = FALSE);
 	BOOL get_sub_line(LPWSTR *lineStr, int *length);
 	BOOL read_data_into_buffer();
+	void EmbedUnicodeSymbols(LPWSTR pSubStr, LPWSTR pLine);
 };
 
 #define READBUFFERSIZE	1025
@@ -56,7 +58,8 @@ BOOL should_read_new_data(LPWSTR buf, int* newline_length, SubToSAMIConverter* p
 LINETYPE get_line_type(LPTSTR line, SubToSAMIConverter* pSamiConverter);
 bool saIsDigit(const TCHAR ch);
 DWORDLONG calculate_timestamp_ms(LPTSTR str, BOOL isEndingTime, SubToSAMIConverter* pSamiConverter);
-bool isNumber(LPTSTR str);
+bool isNumber(LPTSTR str, int length_to_check);
 // void DisplayFileManagementError(LPTSTR lpszFunction);
+BOOL CheckUnicodeSymbol(LPWSTR pLine);
 
 #endif //__SAMI_CONVERSION_H_

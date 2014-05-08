@@ -19,7 +19,8 @@
 #include "wmpplug.h"
 
 // registry location for preferences, not sure whether this is the best
-const WCHAR kwszPrefsRegKey[] = L"Software\\Microsoft\\MediaPlayer\\WmpNativeSubtitlePlugin";
+//const WCHAR kwszPrefsRegKey[] = L"Software\\Microsoft\\MediaPlayer\\WmpNativeSubtitlePlugin";
+const WCHAR kwszPrefsRegKey[] = L"Software\\Microsoft\\MediaPlayer\\UIPlugins\\{52738E25-987F-4CA8-A674-5154267BF422}\\WmpNativeSubtitle";
 const WCHAR kwszPrefsLogging[] = L"LogSettings";
 
 // {52738E25-987F-4CA8-A674-5154267BF422}
