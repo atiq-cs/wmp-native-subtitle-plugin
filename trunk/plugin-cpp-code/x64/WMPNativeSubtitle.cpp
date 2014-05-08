@@ -5,6 +5,9 @@
 //
 // Modified by Saint Atique, September, 2013
 // unix9n@gmail.com,
+//
+// Primary ref: http://msdn.microsoft.com/en-us/library/windows/desktop/dd564686(v=vs.85).aspx
+// For pulgin type we are using ref: http://msdn.microsoft.com/en-us/library/windows/desktop/dd562476(v=vs.85).aspx
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"

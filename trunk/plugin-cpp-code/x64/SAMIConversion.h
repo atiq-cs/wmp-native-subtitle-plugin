@@ -33,7 +33,6 @@ public:
 private:
 	LPTSTR inSubFileName;
 	LPTSTR outSmiFileName;
-	LPTSTR outLogFileName;
 	TCHAR samiBuffer[SMIBUFFERSIZE];		// we maintain buffer to speed up I/O operations
 
 	// Related to file i/o operations 
@@ -58,7 +57,7 @@ BOOL should_read_new_data(LPWSTR buf, int* newline_length, SubToSAMIConverter* p
 LINETYPE get_line_type(LPTSTR line, SubToSAMIConverter* pSamiConverter);
 bool saIsDigit(const TCHAR ch);
 DWORDLONG calculate_timestamp_ms(LPTSTR str, BOOL isEndingTime, SubToSAMIConverter* pSamiConverter);
-bool isNumber(LPTSTR str, int length_to_check);
+bool isNumber(LPTSTR str, size_t length_to_check);
 // void DisplayFileManagementError(LPTSTR lpszFunction);
 BOOL CheckUnicodeSymbol(LPWSTR pLine);
 

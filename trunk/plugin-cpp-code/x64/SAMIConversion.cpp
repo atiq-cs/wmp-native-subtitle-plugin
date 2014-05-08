@@ -29,10 +29,12 @@ m_bLogEnabled(bLogStatus)
 	_tcsncpy_s(outSmiFileName, smiFNSize, inSubFileName, smiFNSize - 4);
 	_tcscpy_s(&outSmiFileName[smiFNSize - 4], 4, TEXT("smi"));
 
+	/*
+	This is the technique if we want to log file to be created in same location where media file reside
 	outLogFileName = new TCHAR[smiFNSize + 5];
 	_tcsncpy_s(outLogFileName, smiFNSize, inSubFileName, smiFNSize - 5);
 	_tcscpy_s(&outLogFileName[smiFNSize - 5], 9, TEXT("_log.txt"));
-	// MessageBox(NULL, outLogFileName, TEXT("SAMI File Out info"), MB_OK);
+	*/
 
 	// initialize file handle
 	hInFile = CreateFile(inSubFileName,               // file to open
@@ -60,13 +62,30 @@ m_bLogEnabled(bLogStatus)
 		ErrorExit(outSmiFileName);
 	}
 
+	samiBuffer[0] = L'\0';
+
 	if (m_bLogEnabled) {
+		TCHAR lpLogFilePathBuffer[MAX_PATH];
+		//  Gets the temp path env string (no guarantee it's a valid path).
+		DWORD dwRetVal = GetTempPath(MAX_PATH,          // length of the buffer
+			lpLogFilePathBuffer); // buffer for path 
+
+		if (dwRetVal > MAX_PATH || (dwRetVal == 0))
+		{
+			if (!CloseHandle(hLogFile))
+			{
+				hLogFile = NULL;
+				return;
+			}
+			return;
+		}
+		wcscat_s(lpLogFilePathBuffer, MAX_PATH, TEXT("\\wmp_native_sub_conversion.log"));
 		// open log file handle
-		hLogFile = CreateFile(outLogFileName,                // name of the write
+		hLogFile = CreateFile(lpLogFilePathBuffer,                // name of the write
 			GENERIC_WRITE,          // open for writing
 			0,                      // do not share
 			NULL,                   // default security
-			CREATE_NEW,             // create new file only
+			CREATE_ALWAYS,             // create always, erase previous, ref: http://msdn.microsoft.com/en-us/library/windows/desktop/aa363858(v=vs.85).aspx
 			FILE_ATTRIBUTE_NORMAL,  // normal file
 			NULL);                  // no attr. template
 
@@ -76,7 +95,6 @@ m_bLogEnabled(bLogStatus)
 	else
 		hLogFile = NULL;
 
-	samiBuffer[0] = L'\0';
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -88,8 +106,6 @@ SubToSAMIConverter::~SubToSAMIConverter() {
 	inSubFileName = NULL;
 	delete outSmiFileName;
 	outSmiFileName = NULL;
-	delete outLogFileName;
-	outLogFileName=NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -299,27 +315,29 @@ BOOL SubToSAMIConverter::convert_to_sami() {
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CWMPNativeSubtitle::writeSmiText
+// CWMPNativeSubtitle::EmbedUnicodeSymbols
 // Take Unicode string to write into UTF-8 file
-// if unicode to utf-8 conversion fails or write fails it returns an error
+// if Unicode char is found encode in html, otherwise append as direct ansi char
+// ANSI, Unicode Char List ref: http://www.alanwood.net/demos/ansi.html
 void SubToSAMIConverter::EmbedUnicodeSymbols(LPWSTR pSubStr, LPWSTR pLine) {
-	size_t pSubLen = wcslen(pSubStr);
+	size_t substr_length = wcslen(pSubStr);
 	for (int i = 0; pLine[i] != _T('\0'); i++) {
 		if ((unsigned int)pLine[i] <= 0xFF) {
-			pSubStr[pSubLen++] = pLine[i];
+			pSubStr[substr_length++] = pLine[i];
 		}
 		else {
-			pSubStr[pSubLen++] = L'&';
-			pSubStr[pSubLen++] = L'#';
+			pSubStr[substr_length++] = L'&';
+			pSubStr[substr_length++] = L'#';
 
 			WCHAR numbuf[12];
 			_itow_s((int)pLine[i], numbuf, 10, 10);
+			// wcsncpy_s(&pSubStr[substr_length], READBUFFERSIZE * 7, numbuf, wcslen(numbuf));
 			for (int j = 0; numbuf[j] != L'\0'; j++)
-				pSubStr[pSubLen++] = numbuf[j];
-			pSubStr[pSubLen++] = L';';
+				pSubStr[substr_length++] = numbuf[j];
+			pSubStr[substr_length++] = L';';
 		}
 	}
-	pSubStr[pSubLen] = L'\0';
+	pSubStr[substr_length] = L'\0';
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -357,6 +375,9 @@ BOOL SubToSAMIConverter::writeSmiText(LPTSTR bigStr/*, BOOL BOM_flag*/) {
 void SubToSAMIConverter::writeLog(LPTSTR str) {
 	if (m_bLogEnabled == FALSE)
 		return;
+	if (hLogFile == NULL)
+		return;
+	
 	LPSTR DataBuffer = ConvertUTF16ToUTF8(str);
 	if (DataBuffer == NULL) {
 		MessageBox(NULL, TEXT("Data buffer null"), TEXT("buffer info"), MB_OK);
@@ -391,9 +412,9 @@ BOOL SubToSAMIConverter::get_sub_line(LPTSTR *lineStr, int *length) {
 
 		if (read_data_into_buffer() == FALSE)
 			return FALSE;
-		writeLog(TEXT("read_data_into_buffer:: \r\n-----------------------------------------------------------------------------------\r\n"));
+		/* writeLog(TEXT("read_data_into_buffer:: \r\n-----------------------------------------------------------------------------------\r\n"));
 		writeLog(samiBuffer);
-		writeLog(TEXT("\r\n-----------------------------------------------------------------------------------\r\n"));
+		writeLog(TEXT("\r\n-----------------------------------------------------------------------------------\r\n"));*/
 		writeLog(TEXT("get_sub_line:: successfully read data into buffer\r\n"));
 
 		// we are running it now to get newline position
@@ -656,7 +677,7 @@ LINETYPE get_line_type(LPTSTR line, SubToSAMIConverter* pSamiConverter) {
 
 }
 
-bool isNumber(LPTSTR str, int length_to_check) {
+bool isNumber(LPTSTR str, size_t length_to_check) {
     // Does not accepts number preceding a - sign, as sequence in sub never negative
 	int i;
 	// size_t len = _tcslen(str);
