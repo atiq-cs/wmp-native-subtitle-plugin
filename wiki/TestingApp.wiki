@@ -1,0 +1,8 @@
+#summary standard testing practices and test-cases to consider.
+#labels Phase-Support
+
+=== Unicode Tests ===
+  * Test with entire line containing Unicode string
+  * Testing mix of Unicode and ansi
+  * Test with ansi string only
+
