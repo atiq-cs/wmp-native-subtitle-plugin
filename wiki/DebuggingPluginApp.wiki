@@ -1,0 +1,14 @@
+#summary One-sentence summary of this page.
+#labels Phase-Support
+
+= Debugging The Plugin Application =
+In following ways the application can be debugged:
+  * We have a log file, we can use that to log and displayed detailed information on our point of interest: variables, objects and flow.
+  * We can generate Message Dialog Box for displaying small info. However, we need to be very careful if we use MessageBox for debugging. Because MessageBox is created in a loop that will create lots of problem while WMP is running with the plugin activated. So, if you use MessageBox be certain that this will not be executed more than a few times.
+
+Add your content here.
+
+
+= References =
+
+  * [http://msdn.microsoft.com/en-us/library/windows/desktop/ms645505(v=vs.85).aspx MessageBox function]
