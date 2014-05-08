@@ -1,0 +1,13 @@
+#summary Providing Specification considered during Design
+#labels Phase-Support
+
+== Unix Conventions ==
+We are supporting Unix Text File encoding which uses \n instead of \r\n. However, our output file use \r\n and utf-8 encoding.
+
+== Counter Number ==
+=== Max length ===
+Max length of counter number / sequence including trailing spaces can be MAX_SEQ_LENGTH which is currently defined as 8. So,
+a number such as this 123456789 will go into caption text rather than being considered as number.
+
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
