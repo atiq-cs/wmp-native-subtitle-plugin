@@ -1,5 +1,5 @@
-#summary One-sentence summary of this page.
 #labels Phase-Support
+#How to debug and test the application
 
 = Debugging The Plugin Application =
 In following ways the application can be debugged:
@@ -12,3 +12,4 @@ Add your content here.
 = References =
 
   * [http://msdn.microsoft.com/en-us/library/windows/desktop/ms645505(v=vs.85).aspx MessageBox function]
+  * [http://msdn.microsoft.com/en-us/library/778b51zb.aspx ATL MessageBox]
