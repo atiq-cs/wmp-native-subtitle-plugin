@@ -1,5 +1,5 @@
+#summary How to use Windows Registry with Plugin App
 #labels Phase-Requirements
-#How to use Windows Registry with Plugin App
 
 = Storing/retrieving Property Data using Windows Registry =
 
