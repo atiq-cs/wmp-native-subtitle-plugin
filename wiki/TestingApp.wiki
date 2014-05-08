@@ -6,3 +6,5 @@
   * Testing mix of Unicode and ansi
   * Test with ansi string only
 
+=== Counter Number Tests ===
+  * Do not maintain the sequence, sometimes miss it to find whether any problem occurs
