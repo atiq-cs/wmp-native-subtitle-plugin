@@ -1,5 +1,5 @@
 #labels Phase-Support
-#How to debug and test the application
+#How to debug and test the application.
 
 = Debugging The Plugin Application =
 In following ways the application can be debugged:
