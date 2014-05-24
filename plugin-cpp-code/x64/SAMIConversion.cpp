@@ -322,7 +322,7 @@ BOOL SubToSAMIConverter::convert_to_sami() {
 void SubToSAMIConverter::EmbedUnicodeSymbols(LPWSTR pSubStr, LPWSTR pLine) {
 	size_t substr_length = wcslen(pSubStr);
 	for (int i = 0; pLine[i] != _T('\0'); i++) {
-		if ((unsigned int)pLine[i] <= 0xFF) {
+		if ((unsigned int)pLine[i] <= 0x7F) {
 			pSubStr[substr_length++] = pLine[i];
 		}
 		else {
@@ -599,7 +599,7 @@ BOOL SubToSAMIConverter::read_data_into_buffer() {
 BOOL CheckUnicodeSymbol(LPWSTR pLine) {
 	// check if we need to embed Unicode
 	for (int i = 0; pLine[i] != _T('\0'); i++)
-		if ((unsigned int)pLine[i] > 0xFF)
+		if ((unsigned int)pLine[i] > 0x7F)
 			return TRUE;
 
 	return FALSE;
