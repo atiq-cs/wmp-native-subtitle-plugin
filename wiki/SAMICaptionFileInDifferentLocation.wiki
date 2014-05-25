@@ -9,42 +9,34 @@ Our previous technique was to enable caption from the location where media file 
 For that our implementation code looked like:
 
 {{{
-	BSTR mediaFileName;
-	HRESULT hr = m_spCore->get_URL(&mediaFileName);
-	m_spCore->close();
-	m_spCore->put_URL(mediaFileName);
-	::SysFreeString(mediaFileName);
+BSTR mediaFileName;
+HRESULT hr = m_spCore->get_URL(&mediaFileName);
+m_spCore->close();
+m_spCore->put_URL(mediaFileName);
+::SysFreeString(mediaFileName);
 }}} 
 
 == Current Technique ==
 Our current implementation will be like following:
-  * We will check for smi in current media location. If found Media Player will use it. If not found we will create smi from existing srt and put it in a default location such TEMP dir.
+  * We will check for smi in current media location.
+    * If sami file is found Media Player will use it. If not found we will create smi from existing srt and put it in a default location such TEMP dir.
   
 The code for enabling caption from different location looks like this,
 {{{
-		BSTR extSmiFileName = ::SysAllocString(TEXT("H:\\test.smi"));
-		BSTR mediaFileName;
-		HRESULT hr = m_spCore->get_URL(&mediaFileName);
+BSTR extSmiFileName = ::SysAllocString(TEXT("H:\\test.smi"));
+BSTR mediaFileName;
+HRESULT hr = m_spCore->get_URL(&mediaFileName);
 
-		hr = E_FAIL;
-		CComPtr<IWMPClosedCaption> spWMPClosedCaption;
-		hr = m_spCore->get_closedCaption(&spWMPClosedCaption);
-		m_spCore->close();
+hr = E_FAIL;
+CComPtr<IWMPClosedCaption> spWMPClosedCaption;
+hr = m_spCore->get_closedCaption(&spWMPClosedCaption);
+m_spCore->close();
 
-		if (FAILMSG(hr)) {
-			MessageBox(NULL, TEXT("Interface not found"), TEXT("IWMPClosedCaption"), MB_OK);
-		}
-
-		if (spWMPClosedCaption)
-		{
-			hr = spWMPClosedCaption->put_SAMIFileName(extSmiFileName);
-			if (FAILMSG(hr))
-				MessageBox(NULL, TEXT("put smi failed"), TEXT("IWMPClosedCaption"), MB_OK);
-		}
-		m_spCore->put_URL(mediaFileName);
-		::SysFreeString(mediaFileName);
-
-		::SysFreeString(extSmiFileName);
+if (spWMPClosedCaption)
+	hr = spWMPClosedCaption->put_SAMIFileName(extSmiFileName);
+m_spCore->put_URL(mediaFileName);
+::SysFreeString(mediaFileName);
+::SysFreeString(extSmiFileName);
 }}}
 
 In this example code, we have used caption from location H:\test.smi
